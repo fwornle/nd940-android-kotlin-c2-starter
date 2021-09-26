@@ -3,16 +3,20 @@ package com.udacity.asteroidradar.api
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.Constants
 import org.json.JSONObject
+import java.lang.Integer.min
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+// parse JSON body and extract asteroid data objects as ArrayList
 fun parseAsteroidsJsonResult(jsonResult: JSONObject): ArrayList<Asteroid> {
     val nearEarthObjectsJson = jsonResult.getJSONObject("near_earth_objects")
 
     val asteroidList = ArrayList<Asteroid>()
 
-    val nextSevenDaysFormattedDates = getNextSevenDaysFormattedDates()
+    // (simple) bugfix: restrict the generated dates to the number of available neo-s
+    val nextSevenDaysFormattedDates = getNextSevenDaysFormattedDates().take(nearEarthObjectsJson.length())
+
     for (formattedDate in nextSevenDaysFormattedDates) {
         val dateAsteroidJsonArray = nearEarthObjectsJson.getJSONArray(formattedDate)
 
@@ -46,7 +50,9 @@ private fun getNextSevenDaysFormattedDates(): ArrayList<String> {
     val formattedDateList = ArrayList<String>()
 
     val calendar = Calendar.getInstance()
-    for (i in 0..Constants.DEFAULT_END_DATE_DAYS) {
+
+    // corrected to 1..7 (the API only provides 7 day windows - in DEMO_KEY mode)
+    for (i in 1..Constants.DEFAULT_END_DATE_DAYS) {
         val currentTime = calendar.time
         val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
         formattedDateList.add(dateFormat.format(currentTime))
