@@ -5,6 +5,9 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import coil.load
+import coil.transform.CircleCropTransformation
+import coil.transform.GrayscaleTransformation
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
 
@@ -23,6 +26,7 @@ class MainFragment : Fragment() {
         binding.lifecycleOwner = this
 
         binding.viewModel = viewModel
+
 
         // observer of LiveData 'navigateToAsteroidDetails'
         // - this performs the actual navigation to the details fragment

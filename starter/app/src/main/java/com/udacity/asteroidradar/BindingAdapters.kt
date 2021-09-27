@@ -3,6 +3,25 @@ package com.udacity.asteroidradar
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
+import coil.load
+
+// layout properties with attribute <... app:apod ...> call upon this code
+@BindingAdapter("apod")
+fun bindImage(imgView: ImageView, apod: PictureOfDay?) {
+    apod?.let {
+        // load image using "coil"
+        // ... see: https://github.com/coil-kt/coil#readme
+        // Coil (suspends the current coroutine; non-blocking and thread safe)
+        imgView
+            // .load("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTc9mTlmQ_nD24rgudSHzKPsAZdSKn861Z0bw&usqp=CAU")
+            .load(it.url)
+            {
+                crossfade(true)
+                placeholder(R.drawable.placeholder_picture_of_day)
+            }
+
+    }
+}
 
 // layout properties with attribute <... app:statusIcon ...> call upon this code
 @BindingAdapter("statusIcon")
