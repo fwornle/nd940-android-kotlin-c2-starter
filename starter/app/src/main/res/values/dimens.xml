@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="margin_large">16dp</dimen>
+    <dimen name="margin_small">6dp</dimen>
+    <dimen name="margin_tiny">3dp</dimen>
+    <dimen name="asteroid_entry_height">35dp</dimen>
+    <dimen name="label_text_size_small">16sp</dimen>
+    <dimen name="size_horizontal_codename">250dp</dimen>
+    <dimen name="size_asteroid_icon">24dp</dimen>
+</resources>

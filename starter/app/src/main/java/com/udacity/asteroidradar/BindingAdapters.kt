@@ -4,7 +4,9 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
+import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.udacity.asteroidradar.main.AsteroidRecyclerAdapter
 import com.udacity.asteroidradar.main.NetApiStatus
 
 // layout properties with attribute <... app:apodImage ...> call upon this code
@@ -27,6 +29,15 @@ fun bindImage(imgView: ImageView, apod: PictureOfDay?) {
                 error(R.drawable.ic_broken_image)           // retrieval of image unsuccessful
             }
     }
+}
+
+
+// layout properties with attribute <... app:listData ...> call upon this code
+// ... this binds the data provided by the AsteroidRecyclerAdapter to the RV view element
+@BindingAdapter("listData")
+fun bindRecyclerView(recyclerView: RecyclerView, data: List<Asteroid>?) {
+    val adapter = recyclerView.adapter as AsteroidRecyclerAdapter
+    adapter.submitList(data)
 }
 
 // layout properties with attribute <... app:netStatus ...> call upon this code

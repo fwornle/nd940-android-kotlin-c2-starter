@@ -8,6 +8,7 @@ import androidx.navigation.fragment.findNavController
 import coil.load
 import coil.transform.CircleCropTransformation
 import coil.transform.GrayscaleTransformation
+import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
 
@@ -23,6 +24,8 @@ class MainFragment : Fragment() {
 
         // inflate MainFragment layout
         val binding = FragmentMainBinding.inflate(inflater)
+
+        // Allows Data Binding to Observe LiveData with the lifecycle of this Fragment
         binding.lifecycleOwner = this
 
         // note: by the time the viewModel is (lazily) initialized (--> this line, below), the
@@ -45,6 +48,21 @@ class MainFragment : Fragment() {
                 viewModel.displayAsteroidDetailsComplete()
             }
         })
+
+        // set RV adapter, using constructor parameter 'OnClickListener' to provide a lambda
+        // function, which is used during ViewHolder binding to install an OnClick listener to each
+        // RV view item, using the corresponding data element as parameter
+        //
+        // ... function 'displayAsteroidDetails' sets the LiveData _navigateToAsteroidDetails
+        // to the provided Asteroid element (during ViewHolder binding) --> this is used to
+        // trigger navigation to the details fragment
+        binding.asteroidRecycler.adapter = AsteroidRecyclerAdapter(
+            AsteroidRecyclerAdapter.OnClickListener {
+                // trigger navigation - selected asteroid data sent as bundle (SafeArgs)
+                viewModel.displayAsteroidDetails(it)
+            }
+        )
+
 
         setHasOptionsMenu(true)
         return binding.root

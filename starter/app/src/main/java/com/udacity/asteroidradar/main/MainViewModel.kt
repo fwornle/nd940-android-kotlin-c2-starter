@@ -37,8 +37,8 @@ class MainViewModel : ViewModel() {
         get() = _statusApod
 
     // LiveData for list of asteroids to be displayed
-    private val _asteroids = MutableLiveData<ArrayList<Asteroid>>()
-    val asteroids: LiveData<ArrayList<Asteroid>>
+    private val _asteroids = MutableLiveData<List<Asteroid>>()
+    val asteroids: LiveData<List<Asteroid>>
         get() = _asteroids
 
     // LiveData for Astronomy Picture of the Day (APOD) to be displayed atop the asteroids list
@@ -67,8 +67,8 @@ class MainViewModel : ViewModel() {
         _navigateToAsteroidDetails.value = null
 
         // fetch asteroids data - also initializes LiveData _status to LOADING
-        val startDate = "2021-09-26"    // must be today or future (APP requirement)
-        val endDate = "2021-10-01"      // must be within the next 7 days (API limitation)
+        val startDate = "2021-09-27"    // must be today or future (APP requirement)
+        val endDate = "2021-10-02"      // must be within the next 7 days (API limitation)
         getAsteroids(startDate, endDate)
 
         // fetch Astronomy Picture of the Day (APOD)
@@ -92,9 +92,10 @@ class MainViewModel : ViewModel() {
             try{
                 // initiate the (HTTP) GET request using the provided query parameters
                 // (... the URL ends on '?start_date=<startDate.value>&end_date=<...>&...' )
-                Timber.i("Sending NewWs GET request")
+                Timber.i("Sending NeoWs GET request")
                 val response: Response<String> = AsteroidsNeoWsApi.retrofitServiceScalars
                     .getAsteroids(startDate, endDate, API_KEY)
+                Timber.i("NeoWs GET request complete")
 
                 // got data back?
                 // ... see: https://johncodeos.com/how-to-parse-json-with-retrofit-converters-using-kotlin/
@@ -133,6 +134,7 @@ class MainViewModel : ViewModel() {
                 Timber.i("Sending APOD GET request")
                 val response: Response<PictureOfDay> = ApodApi.retrofitServiceMoshi
                     .getPictureOfDay(API_KEY)
+                Timber.i("APOD GET request complete")
 
                 // received anything useful?
                 if (response.isSuccessful) {

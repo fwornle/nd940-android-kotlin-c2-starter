@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="asteroid"
+            type="com.udacity.asteroidradar.Asteroid" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/asteroid_entry_height"
+        android:layout_marginStart="@dimen/margin_small"
+        android:layout_marginTop="@dimen/margin_small"
+        android:layout_marginEnd="@dimen/margin_small"
+        android:foregroundGravity="left">
+
+        <!-- icon for potentially hazardous/benign asteroid -->
+        <ImageView
+            android:id="@+id/ivIcon"
+            android:layout_width="@dimen/size_asteroid_icon"
+            android:layout_height="@dimen/size_asteroid_icon"
+            android:layout_marginStart="@dimen/margin_large"
+            android:layout_marginEnd="@dimen/margin_large"
+            android:adjustViewBounds="false"
+            android:contentDescription="@string/asteroid_icon"
+            android:scaleType="centerInside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tvCodeName"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:statusIcon="@{asteroid.isPotentiallyHazardous}"
+            tools:src="@drawable/ic_status_potentially_hazardous" />
+
+        <!-- asteroid name -->
+        <TextView
+            android:id="@+id/tvCodeName"
+            android:layout_width="@dimen/size_horizontal_codename"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout_marginStart="@dimen/margin_tiny"
+            android:layout_marginEnd="@dimen/margin_tiny"
+            android:gravity="center_vertical"
+            android:text="@{asteroid.codename}"
+            android:textColor="@color/default_text_color"
+            android:textSize="@dimen/label_text_size_small"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/ivIcon"
+            app:layout_constraintEnd_toStartOf="@id/tvApproachDate"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="[codename]" />
+
+        <!-- close approach date -->
+        <TextView
+            android:id="@+id/tvApproachDate"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout_marginStart="@dimen/margin_tiny"
+            android:layout_marginEnd="@dimen/margin_large"
+            android:gravity="center_vertical"
+            android:text="@{asteroid.closeApproachDate}"
+            android:textColor="@color/default_text_color"
+            android:textSize="@dimen/label_text_size_small"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/tvCodeName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="[close approach]" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

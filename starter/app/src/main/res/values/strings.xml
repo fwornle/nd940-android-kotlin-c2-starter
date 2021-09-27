@@ -23,4 +23,6 @@
     <string name="help_button">help button</string>
     <string name="nasa_image_of_the_day">NASA image of the day</string>
     <string name="near_earth_objects_data">Near Earth Objects data</string>
+    <string name="image_of_an_asteroid">image of an asteroid</string>
+    <string name="asteroid_icon">icon for hazardous or benign</string>
 </resources>
