@@ -11,6 +11,7 @@ class AsteroidsApplication: Application() {
 
         // initialize Timber library (logging)
         Timber.plant(Timber.DebugTree())
+
     }
 
 }

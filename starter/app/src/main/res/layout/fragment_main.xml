@@ -22,6 +22,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
+            <!-- overlay image for the display of a loading spinner / net errors
+                 active during the net access to NASA/APOD meta data -->
+            <ImageView
+                android:id="@+id/apod_status_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/nasa_image_of_the_day"
+                app:netStatus="@{viewModel.statusApod}"
+                />
+
+            <!-- actual APOD image
+                 loading / error control during this net activity is controlled by 'coil' -->
             <ImageView
                 android:id="@+id/activity_main_image_of_the_day"
                 android:layout_width="match_parent"
@@ -29,8 +43,7 @@
                 android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
                 android:contentDescription="@string/nasa_image_of_the_day"
-                app:apod="@{viewModel.apod}"
-                app:srcCompat="@drawable/placeholder_picture_of_day"
+                app:apodImage="@{viewModel.apod}"
                 />
 
             <TextView
