@@ -79,6 +79,9 @@ android {
 
         implementation "android.arch.work:work-runtime-ktx:$version_work"
 
+        // logging
+        implementation "com.jakewharton.timber:timber:$version_timber"
+
         testImplementation "junit:junit:$version_junit"
         androidTestImplementation "androidx.test.ext:junit:1.1.3"
         androidTestImplementation "androidx.test.espresso:espresso-core:3.4.0"

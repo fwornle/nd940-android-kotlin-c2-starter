@@ -1,7 +1,5 @@
 package com.udacity.asteroidradar.api
 
-//import com.squareup.moshi.Moshi
-//import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.udacity.asteroidradar.Constants
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -9,14 +7,11 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-//// Moshi builder
-//private val moshi = Moshi.Builder()
-//    .add(KotlinJsonAdapterFactory())
-//    .build()
-
 // Retrofit builder
-// ... using Scalars converter factory (--> GET yields List<String> instead of List<Asteroid>)
-private val retrofit = Retrofit.Builder()
+// ... using Scalars converter factory
+//     --> GET@NeoWs yields a complex JSON record
+//     --> parse ourselves
+private val retrofitScalars = Retrofit.Builder()
     .addConverterFactory(ScalarsConverterFactory.create())
     .baseUrl(Constants.BASE_URL)
     .build()
@@ -42,7 +37,10 @@ interface AsteroidsNeoWsApiService {
 // ... calling AsteroidsNeoWsApi.retrofitService will initialize retrofit with its i/f
 // 'AsteroidsNeoWsApiService'
 object AsteroidsNeoWsApi {
-    val retrofitService: AsteroidsNeoWsApiService by lazy {
-        retrofit.create(AsteroidsNeoWsApiService::class.java)
+
+    // complex JSON --> parse ourselves
+    val retrofitServiceScalars: AsteroidsNeoWsApiService by lazy {
+        retrofitScalars.create(AsteroidsNeoWsApiService::class.java)
     }
+
 }
