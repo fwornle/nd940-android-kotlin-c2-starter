@@ -25,6 +25,11 @@ class MainFragment : Fragment() {
         val binding = FragmentMainBinding.inflate(inflater)
         binding.lifecycleOwner = this
 
+        // note: by the time the viewModel is (lazily) initialized (--> this line, below), the
+        // fragment has already been inflated (--> lines above)
+        // --> data loading spinner logic (see BindingAdapters.kt) have been set-up and become
+        //     effective as soon as the time consuming net API calls are triggered
+        // --> same for DB API calls, once the repo has been implemented (Room)
         binding.viewModel = viewModel
 
 

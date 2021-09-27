@@ -22,4 +22,5 @@
     <string name="image_hazardous">image indicating a potential hazard</string>
     <string name="help_button">help button</string>
     <string name="nasa_image_of_the_day">NASA image of the day</string>
+    <string name="near_earth_objects_data">Near Earth Objects data</string>
 </resources>
