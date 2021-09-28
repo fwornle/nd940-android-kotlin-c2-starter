@@ -14,18 +14,30 @@ import com.udacity.asteroidradar.databinding.FragmentMainBinding
 
 class MainFragment : Fragment() {
 
-    // (lazy) initialize viewModel associated with MainFragment
+    // (lazy) initialization of viewModel associated with MainFragment
+    // ... using 'application' as parameter
     private val viewModel: MainViewModel by lazy {
-        ViewModelProvider(this).get(MainViewModel::class.java)
+
+        // fetch 'activity' reference to get parameter 'application' for the provisioning of the VM
+        val activity = requireNotNull(this.activity) {
+            "You can only access the viewModel after onViewCreated()"
+        }
+
+        // use ViewModel factory function defined in ViewModel to get a reference to the
+        // ViewModel with 'application' as parameter
+        ViewModelProvider(this,
+            MainViewModel.Factory(activity.application)).get(MainViewModel::class.java)
+
     }
 
+    // create fragment view
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
 
         // inflate MainFragment layout
         val binding = FragmentMainBinding.inflate(inflater)
 
-        // Allows Data Binding to Observe LiveData with the lifecycle of this Fragment
+        // Allows Data Binding to observe LiveData with the lifecycle of this Fragment
         binding.lifecycleOwner = this
 
         // note: by the time the viewModel is (lazily) initialized (--> this line, below), the
@@ -63,8 +75,10 @@ class MainFragment : Fragment() {
             }
         )
 
-
+        // overlay menu
         setHasOptionsMenu(true)
+
+        // return the View object of the inflated layout (= the fragment)
         return binding.root
     }
 

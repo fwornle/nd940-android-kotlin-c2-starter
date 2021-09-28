@@ -32,7 +32,7 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerInside"
                 android:contentDescription="@string/nasa_image_of_the_day"
-                app:netStatus="@{viewModel.statusApod}"
+                app:netStatus="@{viewModel.repo.statusApod}"
                 tools:src="@drawable/ic_connection_error"
                 />
 
@@ -45,7 +45,7 @@
                 android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
                 android:contentDescription="@string/nasa_image_of_the_day"
-                app:apodImage="@{viewModel.apod}"
+                app:apodImage="@{viewModel.repo.apod}"
                 />
 
             <TextView
@@ -76,7 +76,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_main_image_of_the_day_layout"
             app:layout_constraintVertical_bias="0.0"
-            app:netStatus="@{viewModel.statusNeoWs}"
+            app:netStatus="@{viewModel.repo.statusNeoWs}"
             tools:src="@drawable/ic_connection_error"
             />
 
@@ -85,7 +85,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:listData="@{viewModel.asteroids}"
+            app:listData="@{viewModel.repo.asteroids}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"

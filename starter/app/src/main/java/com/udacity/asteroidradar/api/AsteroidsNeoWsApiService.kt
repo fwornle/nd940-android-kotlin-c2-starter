@@ -1,6 +1,8 @@
 package com.udacity.asteroidradar.api
 
+import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.Constants
+import com.udacity.asteroidradar.database.DatabaseAsteroid
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
@@ -43,4 +45,20 @@ object AsteroidsNeoWsApi {
         retrofitScalars.create(AsteroidsNeoWsApiService::class.java)
     }
 
+}
+
+// convert from 'data transfer object' (net) to 'database object'
+fun List<Asteroid>.asDatabaseModel(): List<DatabaseAsteroid> {
+    return map {
+        DatabaseAsteroid (
+            id = it.id,
+            codename = it.codename,
+            closeApproachDate = it.closeApproachDate,
+            absoluteMagnitude = it.absoluteMagnitude,
+            estimatedDiameter = it.estimatedDiameter,
+            relativeVelocity = it.relativeVelocity,
+            distanceFromEarth = it.distanceFromEarth,
+            isPotentiallyHazardous = it.isPotentiallyHazardous,
+        )
+    }
 }

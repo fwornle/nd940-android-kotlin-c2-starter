@@ -1,50 +1,26 @@
 package com.udacity.asteroidradar.main
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.*
+import com.example.android.devbyteviewer.database.getDatabase
 import com.udacity.asteroidradar.Asteroid
-import com.udacity.asteroidradar.BuildConfig
-import com.udacity.asteroidradar.PictureOfDay
-import com.udacity.asteroidradar.api.ApodApi
-import com.udacity.asteroidradar.api.AsteroidsNeoWsApi
-import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
+import com.udacity.asteroidradar.repository.AsteroidsRepository
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import retrofit2.Response
-import timber.log.Timber
-import java.lang.Exception
 
 
 // network API status (to maintain a transparent user experience)
 enum class NetApiStatus { LOADING, ERROR, DONE }
 
 // ViewModel for MainFragment
-class MainViewModel : ViewModel() {
+// ... parameter 'application' is the application that this viewmodel is attached to
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    // fetch API key from build config parameter NASA_API_KEY, see: build.gradle (:app)
-    private val API_KEY = BuildConfig.NASA_API_KEY
+    // create DB for local storage of Asteroid data
+    private val database = getDatabase(application)
 
-    // LiveData for storing the status of the most recent API request (to 'AsteroidsNeoWsApi')
-    private val _statusNeoWs = MutableLiveData<NetApiStatus>()
-    val statusNeoWs: LiveData<NetApiStatus>
-        get() = _statusNeoWs
+    // create repository for all data (net or DB)
+    val repo = AsteroidsRepository(database)
 
-    // LiveData for storing the status of the most recent API request (to 'ApodApi')
-    private val _statusApod = MutableLiveData<NetApiStatus>()
-    val statusApod: LiveData<NetApiStatus>
-        get() = _statusApod
-
-    // LiveData for list of asteroids to be displayed
-    private val _asteroids = MutableLiveData<List<Asteroid>>()
-    val asteroids: LiveData<List<Asteroid>>
-        get() = _asteroids
-
-    // LiveData for Astronomy Picture of the Day (APOD) to be displayed atop the asteroids list
-    private val _apod= MutableLiveData<PictureOfDay?>()
-    val apod: LiveData<PictureOfDay?>
-        get() = _apod
 
     // LiveData for navigation (implicitly by 'asteroid selected' or not)
     private val _navigateToAsteroidDetails = MutableLiveData<Asteroid?>()
@@ -62,100 +38,37 @@ class MainViewModel : ViewModel() {
         _navigateToAsteroidDetails.value = null
     }
 
+    // upon instantiating the ViewModel (from MainFragment):
+    // --> update DB from net
     init {
+
         // app starts on asteroids overview fragment (in state 'LOADING') --> not 'in navigation'
         _navigateToAsteroidDetails.value = null
 
         // fetch asteroids data - also initializes LiveData _status to LOADING
-        val startDate = "2021-09-27"    // must be today or future (APP requirement)
-        val endDate = "2021-10-02"      // must be within the next 7 days (API limitation)
-        getAsteroids(startDate, endDate)
+        viewModelScope.launch {
 
-        // fetch Astronomy Picture of the Day (APOD)
-        getPictureOfDay()
+            // HTTP GET for Near Earth Objects (NeoWs) data
+            repo.refreshAsteroids()
+
+            // HTTP GET for Astronomy Picture of the Day (APOD) data
+            repo.refreshPictureOfDay()
+
+        }
 
     }
 
-    // method to retrieve list of asteroids
-    private fun getAsteroids(
-        startDate: String,
-        endDate: String,
-    ) {
-
-        // send GET request to server - coroutine to avoid blocking the UI thread
-        viewModelScope.launch {
-
-            // set initial status
-            _statusNeoWs.value = NetApiStatus.LOADING
-
-            // attempt to read data from server
-            try{
-                // initiate the (HTTP) GET request using the provided query parameters
-                // (... the URL ends on '?start_date=<startDate.value>&end_date=<...>&...' )
-                Timber.i("Sending NeoWs GET request")
-                val response: Response<String> = AsteroidsNeoWsApi.retrofitServiceScalars
-                    .getAsteroids(startDate, endDate, API_KEY)
-                Timber.i("NeoWs GET request complete")
-
-                // got data back?
-                // ... see: https://johncodeos.com/how-to-parse-json-with-retrofit-converters-using-kotlin/
-                if (response.isSuccessful) {
-                    _asteroids.value = parseAsteroidsJsonResult(JSONObject(response.body()!!))
-                }
-
-                // set status to keep UI updated
-                _statusNeoWs.value = NetApiStatus.DONE
-
-            } catch (e: Exception) {
-
-                // something went wrong --> reset _asteroids list
-                _asteroids.value = ArrayList()
-                _statusNeoWs.value = NetApiStatus.ERROR
-
+    /**
+     * Factory for constructing MainViewModel with parameter (mostly boilerplate)
+     */
+    class Factory(val app: Application) : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return MainViewModel(app) as T
             }
-
-        }  // viewModelScope (coroutine)
-
-    }  // getAsteroids()
-
-
-    // method to retrieve Astronomy Picture of the Day (APOD)
-    private fun getPictureOfDay() {
-
-        // send GET request to server - coroutine to avoid blocking the UI thread
-        viewModelScope.launch {
-
-            // set initial status
-            _statusApod.value = NetApiStatus.LOADING
-
-            // attempt to read data from server
-            try{
-                // initiate the (HTTP) GET request
-                Timber.i("Sending APOD GET request")
-                val response: Response<PictureOfDay> = ApodApi.retrofitServiceMoshi
-                    .getPictureOfDay(API_KEY)
-                Timber.i("APOD GET request complete")
-
-                // received anything useful?
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                       _apod.value = it
-                    }
-                }
-
-                // set status to keep UI updated
-                _statusApod.value = NetApiStatus.DONE
-
-            } catch (e: Exception) {
-
-                // something went wrong --> reset Picture of Day LiveData
-                _apod.value = null
-                _statusApod.value = NetApiStatus.ERROR
-
-            }
-
-        }  // viewModelScope (coroutine)
-
-    }  // getPictureOfDay()
+            throw IllegalArgumentException("Unable to construct viewmodel")
+        }
+    }
 
 }  // onViewCreated [MainFragment]
