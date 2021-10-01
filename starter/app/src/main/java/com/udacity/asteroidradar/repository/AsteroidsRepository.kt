@@ -80,7 +80,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
             refreshAsteroids()
 
             // fetch APOD data - also initializes LiveData _statusApod to LOADING
-            refreshPictureOfDay()
+            //refreshPictureOfDay()
 
         }
 
@@ -109,7 +109,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
 
 
         // set initial status
-            _statusNeoWs.value = NetApiStatus.LOADING
+            _statusNeoWs.postValue(NetApiStatus.LOADING)
 
             // attempt to read data from server
             try{
@@ -125,26 +125,28 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
                 // ... see: https://johncodeos.com/how-to-parse-json-with-retrofit-converters-using-kotlin/
                 if (response.isSuccessful) {
                     Timber.i("NeoWs GET response received (parsing...)")
-                    _asteroids.value = parseAsteroidsJsonResult(JSONObject(response.body()!!))
+
+                    // background task --> need to use 'postValue' instead of 'setValue'
+                    _asteroids.postValue(parseAsteroidsJsonResult(JSONObject(response.body()!!)))
                 }
 
                 // set status to keep UI updated
-                _statusNeoWs.value = NetApiStatus.DONE
+                _statusNeoWs.postValue(NetApiStatus.DONE)
                 Timber.i("NeoWs GET request complete (success)")
 
             } catch (e: Exception) {
 
                 // something went wrong --> reset _asteroids list
-                _asteroids.value = ArrayList()
-                _statusNeoWs.value = NetApiStatus.ERROR
+                _asteroids.postValue(ArrayList())
+                _statusNeoWs.postValue(NetApiStatus.ERROR)
                 Timber.i("NeoWs GET request complete (failure)")
                 Timber.i("Exception: ${e.message} // ${e.cause}")
 
             } finally {
 
                 // suspendable function got cancelled by invalidation of coroutine scope
-                _asteroids.value = ArrayList()
-                _statusNeoWs.value = NetApiStatus.ERROR
+                _asteroids.postValue(ArrayList())
+                _statusNeoWs.postValue(NetApiStatus.ERROR)
                 Timber.i("NeoWs GET request complete (failure)")
 
             }

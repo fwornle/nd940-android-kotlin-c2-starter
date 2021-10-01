@@ -42,7 +42,7 @@ fun bindRecyclerView(recyclerView: RecyclerView, data: List<Asteroid>?) {
 
 // layout properties with attribute <... app:netStatus ...> call upon this code
 @BindingAdapter("netStatus")
-fun bindStatus(statusImageView: ImageView, status: NetApiStatus) {
+fun bindStatus(statusImageView: ImageView, status: NetApiStatus?) {
     when (status) {
         NetApiStatus.LOADING -> {
             statusImageView.visibility = View.VISIBLE
