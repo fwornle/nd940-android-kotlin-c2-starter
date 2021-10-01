@@ -29,8 +29,10 @@
             <ImageView
                 android:id="@+id/apod_status_image"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:scaleType="centerInside"
+                android:adjustViewBounds="false"
+                android:layout_gravity="center"
                 android:contentDescription="@string/nasa_image_of_the_day"
                 app:netStatus="@{viewModel.statusApod}"
                 tools:src="@drawable/ic_connection_error"
@@ -43,7 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:adjustViewBounds="true"
-                android:scaleType="centerCrop"
+                android:scaleType="fitXY"
                 android:contentDescription="@string/nasa_image_of_the_day"
                 app:apodImage="@{viewModel.apod}"
                 />
@@ -65,17 +67,16 @@
              active during the net access to NASA/NeoWs meta data -->
         <ImageView
             android:id="@+id/asteroids_status_image"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:adjustViewBounds="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:scaleType="centerInside"
+            android:adjustViewBounds="true"
             android:contentDescription="@string/near_earth_objects_data"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_main_image_of_the_day_layout"
-            app:layout_constraintVertical_bias="0.0"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_bias="0.5"
             app:netStatus="@{viewModel.statusNeoWs}"
             tools:src="@drawable/ic_connection_error"
             />
@@ -105,5 +106,6 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

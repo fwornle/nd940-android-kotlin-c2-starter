@@ -47,10 +47,14 @@ fun bindStatus(statusImageView: ImageView, status: NetApiStatus) {
         NetApiStatus.LOADING -> {
             statusImageView.visibility = View.VISIBLE
             statusImageView.setImageResource(R.drawable.loading_animation)
+            //statusImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            statusImageView.adjustViewBounds = true
         }
         NetApiStatus.ERROR -> {
             statusImageView.visibility = View.VISIBLE
             statusImageView.setImageResource(R.drawable.ic_connection_error)
+            //statusImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            statusImageView.adjustViewBounds = false
         }
         NetApiStatus.DONE -> {
             statusImageView.visibility = View.GONE
