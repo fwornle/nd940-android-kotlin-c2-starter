@@ -72,6 +72,11 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
     // upon instantiating the repository class (from ViewModel)
     init {
 
+        // make sure all LiveData elements have defined values
+        _statusNeoWs.value = NetApiStatus.DONE
+        _statusApod.value = NetApiStatus.DONE
+        _apod.value = null
+        _asteroids.value = ArrayList<Asteroid>()
 
         // run HTTP requests off the UI thread
         viewModelScope.launch {
@@ -80,7 +85,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
             refreshAsteroids()
 
             // fetch APOD data - also initializes LiveData _statusApod to LOADING
-            //refreshPictureOfDay()
+            refreshPictureOfDay()
 
         }
 
@@ -137,17 +142,10 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
             } catch (e: Exception) {
 
                 // something went wrong --> reset _asteroids list
-                _asteroids.postValue(ArrayList())
+                _asteroids.postValue(ArrayList<Asteroid>())
                 _statusNeoWs.postValue(NetApiStatus.ERROR)
                 Timber.i("NeoWs GET request complete (failure)")
                 Timber.i("Exception: ${e.message} // ${e.cause}")
-
-            } finally {
-
-                // suspendable function got cancelled by invalidation of coroutine scope
-                _asteroids.postValue(ArrayList())
-                _statusNeoWs.postValue(NetApiStatus.ERROR)
-                Timber.i("NeoWs GET request complete (failure)")
 
             }
 
@@ -224,7 +222,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
         withContext(Dispatchers.IO) {
 
             // set initial status
-            _statusApod.value = NetApiStatus.LOADING
+            _statusApod.postValue(NetApiStatus.LOADING)
 
             // attempt to read data from server
             try{
@@ -237,28 +235,21 @@ class AsteroidsRepository(private val database: AsteroidsDatabase, viewModelScop
                 // received anything useful?
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        _apod.value = it
+                        _apod.postValue(it)
                     }
                 }
 
                 // set status to keep UI updated
-                _statusApod.value = NetApiStatus.DONE
+                _statusApod.postValue(NetApiStatus.DONE)
                 Timber.i("APOD GET request complete (success)")
 
             } catch (e: Exception) {
 
                 // something went wrong --> reset Picture of Day LiveData
-                _apod.value = null
-                _statusApod.value = NetApiStatus.ERROR
+                _apod.postValue(null)
+                _statusApod.postValue(NetApiStatus.ERROR)
                 Timber.i("APOD GET request complete (failure)")
                 Timber.i("Exception: ${e.message} // ${e.cause}")
-
-            } finally {
-
-                // suspendable function got cancelled by invalidation of coroutine scope
-                _apod.value = null
-                _statusApod.value = NetApiStatus.ERROR
-                Timber.i("APOD GET request complete (failure)")
 
             }
 
