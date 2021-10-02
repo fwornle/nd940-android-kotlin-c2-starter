@@ -28,7 +28,7 @@ import com.udacity.asteroidradar.database.DatabaseAsteroid
 interface AsteroidsDao {
 
     // fetch all available asteroids from DB
-    @Query("select * from databaseasteroid")
+    @Query("select * from asteroid_data_table")
     fun getAsteroids(): LiveData<List<DatabaseAsteroid>>
 
     // insert asteroids - should the data of an asteroid have changed, overwrite old entry
@@ -38,7 +38,7 @@ interface AsteroidsDao {
 }
 
 // define the DB for local storage of asteroid data (as abstract class)
-@Database(entities = [DatabaseAsteroid::class], version = 1)
+@Database(entities = [DatabaseAsteroid::class], version = 2)
 abstract class AsteroidsDatabase : RoomDatabase() {
 
     // DB has a reference to the DAO (abstract, as it's but an interface)
@@ -62,7 +62,9 @@ fun getDatabase(context: Context): AsteroidsDatabase {
             INSTANCE = Room.databaseBuilder(
                 context.applicationContext,
                 AsteroidsDatabase::class.java,
-                "asteroids").build()
+                "asteroids")
+                .fallbackToDestructiveMigration()
+                .build()
         }
 
     }

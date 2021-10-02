@@ -6,6 +6,7 @@ import com.example.android.devbyteviewer.database.getDatabase
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.PictureOfDay
 import com.udacity.asteroidradar.repository.AsteroidsRepository
+import kotlinx.coroutines.launch
 
 
 // network API status (to maintain a transparent user experience)
@@ -20,29 +21,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // create repository for all data (net or DB)
     // pass on viewModelScope to be used as coroutine scope for the async operations of the repo
-    val repo = AsteroidsRepository(database, viewModelScope)
+    val repo = AsteroidsRepository(database)
 
 
     // fetch LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)
     // ... status of the most recent API request (to 'AsteroidsNeoWsApi')
-    val statusNeoWs: LiveData<NetApiStatus>
-        get() = repo.statusNeoWs
+    val statusNeoWs: LiveData<NetApiStatus> = repo.statusNeoWs
 
     // fetch LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)
     // ... list of asteroids to be displayed
-    val asteroids: LiveData<List<Asteroid>>
-        get() = repo.asteroids
+    val asteroids: LiveData<List<Asteroid>> = repo.asteroids
 
 
     // fetch LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)
     // ... status of the most recent API request (to 'AsteroidsApodApi')
-    val statusApod: LiveData<NetApiStatus>
-        get() = repo.statusApod
+    val statusApod: LiveData<NetApiStatus> = repo.statusApod
 
     // fetch LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)
     // ... Astronomy Picture of the Day (APOD) meta data
-    val apod: LiveData<PictureOfDay?>
-        get() = repo.apod
+    val apod: LiveData<PictureOfDay?> = repo.apod
 
 
     // LiveData for navigation (implicitly by 'asteroid selected' or not)
@@ -68,6 +65,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         // app starts on asteroids overview fragment (in state 'LOADING') --> not 'in navigation'
         _navigateToAsteroidDetails.value = null
+
+        // refresh Asteroids data in DB (net call + DB storage)
+        // ... HTTP requests are run off the UI thread
+        // ... associated all of these coroutines with the viewModelScope (= a coroutineScope)
+        viewModelScope.launch {
+
+            // fetch APOD data - also initializes LiveData _statusApod to LOADING
+            repo.fetchPictureOfTheDay()
+
+            // fetch asteroids data - also initializes LiveData _statusNeoWs to LOADING
+            // ... received data is used to update the DB
+            // repo.refreshAsteroidsInDB()
+
+        }
 
         // all other ('hoisted') LiveData elements (= the ones originating in the repo object) are
         // initialized in the 'init { ... }' section of 'repo'
