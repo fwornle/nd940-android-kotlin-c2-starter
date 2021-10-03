@@ -16,12 +16,11 @@
  */
 // fw-210927: adjusted for com.udacity.asteroidradar
 
-package com.example.android.devbyteviewer.database
+package com.udacity.asteroidradar.database
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.udacity.asteroidradar.database.DatabaseAsteroid
 
 // define database access object (DAO) through which we can interact with the DB
 @Dao

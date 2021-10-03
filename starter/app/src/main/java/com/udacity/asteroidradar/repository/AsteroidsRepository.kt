@@ -20,7 +20,8 @@ package com.udacity.asteroidradar.repository
 
 import android.annotation.SuppressLint
 import androidx.lifecycle.*
-import com.example.android.devbyteviewer.database.AsteroidsDao
+import com.udacity.asteroidradar.database.AsteroidsDao
+import com.udacity.asteroidradar.database.asDomainModel
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.BuildConfig
 import com.udacity.asteroidradar.Constants
@@ -29,7 +30,6 @@ import com.udacity.asteroidradar.api.ApodApi
 import com.udacity.asteroidradar.api.AsteroidsNeoWsApi
 import com.udacity.asteroidradar.api.asDatabaseModel
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
-import com.udacity.asteroidradar.database.asDomainModel
 import com.udacity.asteroidradar.main.NetApiStatus
 import kotlinx.coroutines.*
 import org.json.JSONObject

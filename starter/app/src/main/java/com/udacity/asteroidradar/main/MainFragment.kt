@@ -5,10 +5,6 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import coil.load
-import coil.transform.CircleCropTransformation
-import coil.transform.GrayscaleTransformation
-import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.AsteroidsApplication
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding

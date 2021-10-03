@@ -79,19 +79,13 @@ class MainViewModel(private val repo: AsteroidsRepository) : ViewModel() {
         // app starts on asteroids overview fragment (in state 'LOADING') --> not 'in navigation'
         _navigateToAsteroidDetails.value = null
 
-        // refresh Asteroids data in DB (net call + DB storage)
+        // fetch Astronomy Picture of the Day (APOD)
         // ... HTTP requests are run off the UI thread
         // ... associated all of these coroutines with the viewModelScope (= a coroutineScope)
         viewModelScope.launch {
 
             // fetch APOD data - also initializes LiveData _statusApod to LOADING
             repo.fetchPictureOfTheDay()
-
-            // fetch asteroids data - also initializes LiveData _statusNeoWs to LOADING
-            // ... received data is used to update the DB
-            //
-            // TODO: move this to worker (running once per day, constraints: charging, wifi)
-            repo.refreshAsteroidsInDB()
 
         }
 
@@ -113,4 +107,5 @@ class MainViewModel(private val repo: AsteroidsRepository) : ViewModel() {
             throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
+
 }  // onViewCreated [MainFragment]
