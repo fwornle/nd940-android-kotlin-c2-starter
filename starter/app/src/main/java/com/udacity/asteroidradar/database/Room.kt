@@ -28,8 +28,16 @@ import com.udacity.asteroidradar.database.DatabaseAsteroid
 interface AsteroidsDao {
 
     // fetch all available asteroids from DB
-    @Query("select * from asteroid_data_table")
-    fun getAsteroids(): LiveData<List<DatabaseAsteroid>>
+    @Query("select * from asteroid_data_table order by closeApproachDate asc")
+    fun getAllAsteroids(): LiveData<List<DatabaseAsteroid>>
+
+    // fetch coming asteroids from DB
+    @Query("select * from asteroid_data_table where closeApproachDate >= :dateStart order by closeApproachDate asc")
+    fun getAsteroidsFromTodayOn(dateStart: String): LiveData<List<DatabaseAsteroid>>
+
+    // fetch coming asteroids from DB
+    @Query("select * from asteroid_data_table where closeApproachDate = :dateToday order by closeApproachDate asc")
+    fun getAsteroidsApproachingToday(dateToday: String): LiveData<List<DatabaseAsteroid>>
 
     // insert asteroids - should the data of an asteroid have changed, overwrite old entry
     @Insert(onConflict = OnConflictStrategy.REPLACE)

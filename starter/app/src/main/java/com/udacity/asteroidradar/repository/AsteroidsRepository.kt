@@ -29,7 +29,6 @@ import com.udacity.asteroidradar.api.ApodApi
 import com.udacity.asteroidradar.api.AsteroidsNeoWsApi
 import com.udacity.asteroidradar.api.asDatabaseModel
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
-import com.udacity.asteroidradar.database.DatabaseAsteroid
 import com.udacity.asteroidradar.database.asDomainModel
 import com.udacity.asteroidradar.main.NetApiStatus
 import kotlinx.coroutines.*
@@ -48,6 +47,12 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     // fetch API key from build config parameter NASA_API_KEY, see: build.gradle (:app)
     private val API_KEY = BuildConfig.NASA_API_KEY
 
+    // enum for scoping asteroid fetches from DB
+    enum class AsteroidsDbFilter(val value: String) {
+        SHOW_TODAY("today"),
+        SHOW_UPCOMING("upcoming"),
+        SHOW_ALL("all")
+    }
 
     // LiveData for storing the status of the most recent API request (to 'ApodApi')
     private val _statusApod = MutableLiveData<NetApiStatus>()
@@ -66,10 +71,12 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
     // LiveData for list of asteroids from DB
     // ... which can be updated via calls to repository function 'refreshAsteroidsInDB'
-    val asteroids: LiveData<List<Asteroid>> =
-        database.asteroidsDao.getAsteroids().map {
-        it.asDomainModel()
-    }
+    var asteroids: LiveData<List<Asteroid>>
+
+    // define upcoming week
+    private var upcomingWeekDates: ArrayList<String>
+    private var dateToday: String
+    private var dateNextWeek: String
 
 
     // upon instantiating the repository class (from ViewModel)
@@ -85,16 +92,53 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
         _statusApod.value = NetApiStatus.DONE
         _apod.value = null
 
+        // rolling week for data fetch from NASA server - delimited by today ... today + 7 days
+        upcomingWeekDates = getNeoWsDownloadDates()
+        dateToday = upcomingWeekDates[0]    // today
+        dateNextWeek = upcomingWeekDates[1]      // today + one week
+
+        // populate LiveData 'asteroids' with data from DB
+        asteroids = fetchAsteroidsFromDB(AsteroidsDbFilter.SHOW_UPCOMING)
+
     }
 
+    // fetch different scopes of data from DB: all asteroids from today on
+    fun fetchAsteroidsFromDB(filter: AsteroidsDbFilter): LiveData<List<Asteroid>> {
+
+        // scope data from DB
+        return when (filter) {
+            AsteroidsDbFilter.SHOW_TODAY -> fetchAsteroidsApproachingToday()
+            AsteroidsDbFilter.SHOW_UPCOMING -> fetchAsteroidsFromTodayOn()
+            AsteroidsDbFilter.SHOW_ALL -> fetchAsteroidsAll()
+        }
+
+    }
+
+    // fetch different scopes of data from DB: all asteroids from today on
+    private fun fetchAsteroidsFromTodayOn(): LiveData<List<Asteroid>> {
+        return database.asteroidsDao.getAsteroidsFromTodayOn(dateToday).map {
+            //database.asteroidsDao.getAllAsteroids().map {
+            it.asDomainModel()
+        }
+    }
+
+    // fetch different scopes of data from DB: all asteroids approaching today
+    private fun fetchAsteroidsApproachingToday(): LiveData<List<Asteroid>> {
+        return database.asteroidsDao.getAsteroidsApproachingToday(dateToday).map {
+            //database.asteroidsDao.getAllAsteroids().map {
+            it.asDomainModel()
+        }
+    }
+
+    // fetch different scopes of data from DB: all asteroids stored in DB
+    private fun fetchAsteroidsAll(): LiveData<List<Asteroid>> {
+        return database.asteroidsDao.getAllAsteroids().map {
+            it.asDomainModel()
+        }
+    }
 
     // method to retrieve list of asteroids
     suspend fun refreshAsteroidsInDB() {
-
-        // rolling week for data fetch from NASA server - delimited by today ... today + 7 days
-        val upcomingWeekDates: ArrayList<String> = getNeoWsDownloadDates()
-        val startDate = upcomingWeekDates[0]
-        val endDate = upcomingWeekDates[1]
 
         // set initial status
         // ... use postValue when setting LiveData values from background threads, see:
@@ -108,10 +152,10 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
             try{
                 // initiate the (HTTP) GET request using the provided query parameters
                 // (... the URL ends on '?start_date=<startDate.value>&end_date=<...>&...' )
-                Timber.i("Sending GET request for NASA/NeoWs data from ${startDate} to ${endDate}")
+                Timber.i("Sending GET request for NASA/NeoWs data from ${dateToday} to ${dateNextWeek}")
                 val response: Response<String> = async {
                     AsteroidsNeoWsApi.retrofitServiceScalars
-                        .getAsteroids(startDate, endDate, API_KEY)
+                        .getAsteroids(dateToday, dateNextWeek, API_KEY)
                 }.await()
 
                 // got any valid data back?
