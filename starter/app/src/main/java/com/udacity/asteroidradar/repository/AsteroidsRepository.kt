@@ -47,23 +47,16 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     // fetch API key from build config parameter NASA_API_KEY, see: build.gradle (:app)
     private val API_KEY = BuildConfig.NASA_API_KEY
 
-    // enum for scoping asteroid fetches from DB
-    enum class AsteroidsDbFilter(val value: String) {
-        SHOW_TODAY("today"),
-        SHOW_UPCOMING("upcoming"),
-        SHOW_ALL("all")
-    }
-
-
-    // LiveData for storing the status of the most recent API request (to 'ApodApi')
-    private val _statusApod = MutableLiveData<NetApiStatus>()
-    val statusApod: LiveData<NetApiStatus>
-        get() = _statusApod
 
     // LiveData for Astronomy Picture of the Day (APOD) to be displayed atop the asteroids list
     private val _apod= MutableLiveData<PictureOfDay?>()
     val apod: LiveData<PictureOfDay?>
         get() = _apod
+
+    // LiveData for storing the status of the most recent API request (to 'ApodApi')
+    private val _statusApod = MutableLiveData<NetApiStatus>()
+    val statusApod: LiveData<NetApiStatus>
+        get() = _statusApod
 
     // LiveData for storing the status of the most recent API request (to 'AsteroidsNeoWsApi')
     private val _statusNeoWs = MutableLiveData<NetApiStatus>()
@@ -99,19 +92,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
 
     // fetch different scopes of data from DB: all asteroids from today on
-    fun fetchAsteroidsFromDB(filter: AsteroidsDbFilter): LiveData<List<Asteroid>> {
-
-        // scope data from DB
-        return when (filter) {
-            AsteroidsDbFilter.SHOW_TODAY -> fetchAsteroidsApproachingToday()
-            AsteroidsDbFilter.SHOW_UPCOMING -> fetchAsteroidsFromTodayOn()
-            AsteroidsDbFilter.SHOW_ALL -> fetchAsteroidsAll()
-        }
-
-    }
-
-    // fetch different scopes of data from DB: all asteroids from today on
-    private fun fetchAsteroidsFromTodayOn(): LiveData<List<Asteroid>> {
+    fun fetchAsteroidsFromTodayOn(): LiveData<List<Asteroid>> {
         return database.asteroidsDao.getAsteroidsFromTodayOn(dateToday).map {
             //database.asteroidsDao.getAllAsteroids().map {
             it.asDomainModel()
@@ -119,7 +100,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     }
 
     // fetch different scopes of data from DB: all asteroids approaching today
-    private fun fetchAsteroidsApproachingToday(): LiveData<List<Asteroid>> {
+    fun fetchAsteroidsApproachingToday(): LiveData<List<Asteroid>> {
         return database.asteroidsDao.getAsteroidsApproachingToday(dateToday).map {
             //database.asteroidsDao.getAllAsteroids().map {
             it.asDomainModel()
@@ -127,7 +108,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     }
 
     // fetch different scopes of data from DB: all asteroids stored in DB
-    private fun fetchAsteroidsAll(): LiveData<List<Asteroid>> {
+    fun fetchAsteroidsAll(): LiveData<List<Asteroid>> {
         return database.asteroidsDao.getAllAsteroids().map {
             it.asDomainModel()
         }

@@ -96,9 +96,9 @@ class MainFragment : Fragment() {
         // set LiveData 'asteroids' with newly scoped query results
         viewModel.dbScope.value =
             when(item.itemId) {
-                R.id.show_today_menu -> AsteroidsRepository.AsteroidsDbFilter.SHOW_TODAY
-                R.id.show_week_menu -> AsteroidsRepository.AsteroidsDbFilter.SHOW_UPCOMING
-                else -> AsteroidsRepository.AsteroidsDbFilter.SHOW_ALL
+                R.id.show_today_menu -> MainViewModel.AsteroidsFilter.SHOW_TODAY
+                R.id.show_week_menu -> MainViewModel.AsteroidsFilter.SHOW_UPCOMING
+                else -> MainViewModel.AsteroidsFilter.SHOW_ALL
             }
 
         // done evaluating the selected menu item
