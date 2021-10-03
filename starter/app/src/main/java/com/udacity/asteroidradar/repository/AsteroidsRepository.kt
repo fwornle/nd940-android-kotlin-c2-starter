@@ -71,7 +71,11 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
     // LiveData for list of asteroids from DB
     // ... which can be updated via calls to repository function 'refreshAsteroidsInDB'
-    var asteroids: LiveData<List<Asteroid>>
+    private val _asteroids = MutableLiveData<List<Asteroid>>()
+    val asteroids: LiveData<List<Asteroid>>
+        get() = _asteroids
+
+    //var asteroids: LiveData<List<Asteroid>>
 
     // define upcoming week
     private var upcomingWeekDates: ArrayList<String>
@@ -98,12 +102,21 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
         dateNextWeek = upcomingWeekDates[1]      // today + one week
 
         // populate LiveData 'asteroids' with data from DB
-        asteroids = fetchAsteroidsFromDB(AsteroidsDbFilter.SHOW_UPCOMING)
+        //_asteroids.value = fetchAsteroidsFromDB(AsteroidsDbFilter.SHOW_UPCOMING).value
+        updateAsteroids(AsteroidsDbFilter.SHOW_UPCOMING)
+
+    }
+
+    // public access function: update asteroids data when display scope (DB filter) changes
+    fun updateAsteroids(filter: AsteroidsDbFilter) {
+
+        // fetch new LiveData from DB and update 'asteroids' accordingly
+        _asteroids.value = fetchAsteroidsFromDB(filter).value
 
     }
 
     // fetch different scopes of data from DB: all asteroids from today on
-    fun fetchAsteroidsFromDB(filter: AsteroidsDbFilter): LiveData<List<Asteroid>> {
+    private fun fetchAsteroidsFromDB(filter: AsteroidsDbFilter): LiveData<List<Asteroid>> {
 
         // scope data from DB
         return when (filter) {

@@ -11,6 +11,7 @@ import coil.transform.GrayscaleTransformation
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
+import com.udacity.asteroidradar.repository.AsteroidsRepository
 
 class MainFragment : Fragment() {
 
@@ -89,7 +90,20 @@ class MainFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
     }
 
+    // update asteroid display data in accordance with selected DB scope
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        // set LiveData 'asteroids' with newly scoped query results
+        viewModel.repo.updateAsteroids(
+            when(item.itemId) {
+                R.id.show_today_menu -> AsteroidsRepository.AsteroidsDbFilter.SHOW_TODAY
+                R.id.show_week_menu -> AsteroidsRepository.AsteroidsDbFilter.SHOW_UPCOMING
+                else -> AsteroidsRepository.AsteroidsDbFilter.SHOW_ALL
+            }
+        )
+
+        // done evaluating the selected menu item
         return true
+
     }
 }
