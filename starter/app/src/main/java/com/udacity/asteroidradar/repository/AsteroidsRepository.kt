@@ -71,11 +71,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
     // LiveData for list of asteroids from DB
     // ... which can be updated via calls to repository function 'refreshAsteroidsInDB'
-    private val _asteroids = MutableLiveData<List<Asteroid>>()
-    val asteroids: LiveData<List<Asteroid>>
-        get() = _asteroids
-
-    //var asteroids: LiveData<List<Asteroid>>
+    lateinit var asteroids: LiveData<List<Asteroid>>
 
     // define upcoming week
     private var upcomingWeekDates: ArrayList<String>
@@ -111,7 +107,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     fun updateAsteroids(filter: AsteroidsDbFilter) {
 
         // fetch new LiveData from DB and update 'asteroids' accordingly
-        _asteroids.value = fetchAsteroidsFromDB(filter).value
+        asteroids = fetchAsteroidsFromDB(filter)
 
     }
 
