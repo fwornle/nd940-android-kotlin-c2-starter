@@ -130,10 +130,8 @@ class AsteroidsRepository(private val asteroidsDao: AsteroidsDao) {
                 // initiate the (HTTP) GET request using the provided query parameters
                 // (... the URL ends on '?start_date=<startDate.value>&end_date=<...>&...' )
                 Timber.i("Sending GET request for NASA/NeoWs data from ${dateToday} to ${dateNextWeek}")
-                val response: Response<String> = async {
-                    AsteroidsNeoWsApi.retrofitServiceScalars
+                val response: Response<String> = AsteroidsNeoWsApi.retrofitServiceScalars
                         .getAsteroids(dateToday, dateNextWeek, API_KEY)
-                }.await()
 
                 // got any valid data back?
                 // ... see: https://johncodeos.com/how-to-parse-json-with-retrofit-converters-using-kotlin/
@@ -184,9 +182,9 @@ class AsteroidsRepository(private val asteroidsDao: AsteroidsDao) {
             try{
                 // initiate the (HTTP) GET request
                 Timber.i("Sending GET request for NASA/APOD data")
-                val response: Response<PictureOfDay> = async {
+                val response: Response<PictureOfDay> =
                     ApodApi.retrofitServiceMoshi.getPictureOfDay(API_KEY)
-                }.await()
+
 
                 // received anything useful?
                 if (response.isSuccessful) {
