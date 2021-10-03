@@ -20,7 +20,7 @@ package com.udacity.asteroidradar.repository
 
 import android.annotation.SuppressLint
 import androidx.lifecycle.*
-import com.example.android.devbyteviewer.database.AsteroidsDatabase
+import com.example.android.devbyteviewer.database.AsteroidsDao
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.BuildConfig
 import com.udacity.asteroidradar.Constants
@@ -41,8 +41,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 // initiate repo for our data
-// 'dependency injection: DB passed via the constructor
-class AsteroidsRepository(private val database: AsteroidsDatabase) {
+// 'dependency injection: DAO of DB passed via the constructor
+class AsteroidsRepository(private val asteroidsDao: AsteroidsDao) {
 
     // fetch API key from build config parameter NASA_API_KEY, see: build.gradle (:app)
     private val API_KEY = BuildConfig.NASA_API_KEY
@@ -93,7 +93,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
     // fetch different scopes of data from DB: all asteroids from today on
     fun fetchAsteroidsFromTodayOn(): LiveData<List<Asteroid>> {
-        return database.asteroidsDao.getAsteroidsFromTodayOn(dateToday).map {
+        return asteroidsDao.getAsteroidsFromTodayOn(dateToday).map {
             //database.asteroidsDao.getAllAsteroids().map {
             it.asDomainModel()
         }
@@ -101,7 +101,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
     // fetch different scopes of data from DB: all asteroids approaching today
     fun fetchAsteroidsApproachingToday(): LiveData<List<Asteroid>> {
-        return database.asteroidsDao.getAsteroidsApproachingToday(dateToday).map {
+        return asteroidsDao.getAsteroidsApproachingToday(dateToday).map {
             //database.asteroidsDao.getAllAsteroids().map {
             it.asDomainModel()
         }
@@ -109,7 +109,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
     // fetch different scopes of data from DB: all asteroids stored in DB
     fun fetchAsteroidsAll(): LiveData<List<Asteroid>> {
-        return database.asteroidsDao.getAllAsteroids().map {
+        return asteroidsDao.getAllAsteroids().map {
             it.asDomainModel()
         }
     }
@@ -152,7 +152,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
                     //
                     // DAO method 'insertAll' allows to be called with 'varargs'
                     // --> convert to (typed) array and use 'spread operator' to turn to 'varargs'
-                    database.asteroidsDao.insertAll(*netAsteroidData.toTypedArray())
+                    asteroidsDao.insertAll(*netAsteroidData.toTypedArray())
                     Timber.i("NeoWs data stored in DB")
 
                 }  // if(response.isSuccessful)

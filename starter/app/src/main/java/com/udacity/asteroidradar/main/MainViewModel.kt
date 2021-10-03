@@ -1,8 +1,6 @@
 package com.udacity.asteroidradar.main
 
-import android.app.Application
 import androidx.lifecycle.*
-import com.example.android.devbyteviewer.database.getDatabase
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.PictureOfDay
 import com.udacity.asteroidradar.repository.AsteroidsRepository
@@ -13,8 +11,8 @@ import kotlinx.coroutines.launch
 enum class NetApiStatus { LOADING, ERROR, DONE }
 
 // ViewModel for MainFragment
-// ... parameter 'application' is the application that this viewmodel is attached to
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+// ... injected parameter 'repository' is the data source for this ViewModel
+class MainViewModel(private val repo: AsteroidsRepository) : ViewModel() {
 
     // enum for scoping asteroid fetches from DB
     enum class AsteroidsFilter(val value: String) {
@@ -22,14 +20,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         SHOW_UPCOMING("upcoming"),
         SHOW_ALL("all")
     }
-
-    // create DB for local storage of Asteroid data
-    private val database = getDatabase(application)
-
-    // create repository for all data (net or DB)
-    // pass on viewModelScope to be used as coroutine scope for the async operations of the repo
-    val repo = AsteroidsRepository(database)
-
 
     // hoist LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)
     // ... Astronomy Picture of the Day (APOD) meta data
@@ -110,16 +100,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
 
     /**
-     * Factory for constructing MainViewModel with parameter (mostly boilerplate)
+     * Factory for constructing MainViewModel with injected 'repository' parameter
      */
-    class Factory(val app: Application) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    class MainViewModelFactory(private val repository: AsteroidsRepository) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return MainViewModel(app) as T
+                return MainViewModel(repository) as T
             }
-            throw IllegalArgumentException("Unable to construct viewmodel")
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
-
 }  // onViewCreated [MainFragment]

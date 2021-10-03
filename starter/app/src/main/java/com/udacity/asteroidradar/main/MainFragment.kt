@@ -9,25 +9,30 @@ import coil.load
 import coil.transform.CircleCropTransformation
 import coil.transform.GrayscaleTransformation
 import com.udacity.asteroidradar.Asteroid
+import com.udacity.asteroidradar.AsteroidsApplication
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
-import com.udacity.asteroidradar.repository.AsteroidsRepository
 
 class MainFragment : Fragment() {
 
     // (lazy) initialization of viewModel associated with MainFragment
-    // ... using 'application' as parameter
+    // ... using 'repository' as parameter
     private val viewModel: MainViewModel by lazy {
 
-        // fetch 'activity' reference to get parameter 'application' for the provisioning of the VM
+        // fetch 'activity' (-> 'application' -> 'repository')
+        // ... needed during the instantiation of the ViewModel (to connect it to the data source)
         val activity = requireNotNull(this.activity) {
             "You can only access the viewModel after onViewCreated()"
         }
 
         // use ViewModel factory function defined in ViewModel to get a reference to the
         // ViewModel with 'application' as parameter
-        ViewModelProvider(this,
-            MainViewModel.Factory(activity.application)).get(MainViewModel::class.java)
+        ViewModelProvider(
+            this,
+            MainViewModel.MainViewModelFactory(
+                (activity.application as AsteroidsApplication).repository
+            )
+        ).get(MainViewModel::class.java)
 
     }
 
