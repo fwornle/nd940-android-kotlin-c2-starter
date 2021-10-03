@@ -30,7 +30,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // fetch LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)
     // ... list of asteroids to be displayed
-    val asteroids: LiveData<List<Asteroid>> = repo.asteroids
+    // val asteroids: LiveData<List<Asteroid>> = repo.asteroids
+
+
+    // LiveData for storing the currently selected scope for data from DB (query 'filter')
+    // ... this 'scope' is applied to the LiveData value of 'asteroids' (see below)
+    var dbScope = MutableLiveData<AsteroidsRepository.AsteroidsDbFilter>(
+        AsteroidsRepository.AsteroidsDbFilter.SHOW_UPCOMING)
+
+    // LiveData for list of asteroids from DB
+    // ... which can be updated via calls to repository function 'refreshAsteroidsInDB'
+    val asteroids: LiveData<List<Asteroid>> = dbScope.switchMap { filter ->
+        repo.fetchAsteroidsFromDB(filter)
+    }
 
 
     // fetch LiveData from repo (so that layouts/Views only depend on the ViewModel - encapsulation)

@@ -54,6 +54,7 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
         SHOW_ALL("all")
     }
 
+
     // LiveData for storing the status of the most recent API request (to 'ApodApi')
     private val _statusApod = MutableLiveData<NetApiStatus>()
     val statusApod: LiveData<NetApiStatus>
@@ -69,9 +70,6 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     val statusNeoWs: LiveData<NetApiStatus>
         get() = _statusNeoWs
 
-    // LiveData for list of asteroids from DB
-    // ... which can be updated via calls to repository function 'refreshAsteroidsInDB'
-    lateinit var asteroids: LiveData<List<Asteroid>>
 
     // define upcoming week
     private var upcomingWeekDates: ArrayList<String>
@@ -97,22 +95,11 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
         dateToday = upcomingWeekDates[0]    // today
         dateNextWeek = upcomingWeekDates[1]      // today + one week
 
-        // populate LiveData 'asteroids' with data from DB
-        //_asteroids.value = fetchAsteroidsFromDB(AsteroidsDbFilter.SHOW_UPCOMING).value
-        updateAsteroids(AsteroidsDbFilter.SHOW_UPCOMING)
-
     }
 
-    // public access function: update asteroids data when display scope (DB filter) changes
-    fun updateAsteroids(filter: AsteroidsDbFilter) {
-
-        // fetch new LiveData from DB and update 'asteroids' accordingly
-        asteroids = fetchAsteroidsFromDB(filter)
-
-    }
 
     // fetch different scopes of data from DB: all asteroids from today on
-    private fun fetchAsteroidsFromDB(filter: AsteroidsDbFilter): LiveData<List<Asteroid>> {
+    fun fetchAsteroidsFromDB(filter: AsteroidsDbFilter): LiveData<List<Asteroid>> {
 
         // scope data from DB
         return when (filter) {

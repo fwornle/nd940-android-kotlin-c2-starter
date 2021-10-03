@@ -94,13 +94,12 @@ class MainFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         // set LiveData 'asteroids' with newly scoped query results
-        viewModel.repo.updateAsteroids(
+        viewModel.dbScope.value =
             when(item.itemId) {
                 R.id.show_today_menu -> AsteroidsRepository.AsteroidsDbFilter.SHOW_TODAY
                 R.id.show_week_menu -> AsteroidsRepository.AsteroidsDbFilter.SHOW_UPCOMING
                 else -> AsteroidsRepository.AsteroidsDbFilter.SHOW_ALL
             }
-        )
 
         // done evaluating the selected menu item
         return true
