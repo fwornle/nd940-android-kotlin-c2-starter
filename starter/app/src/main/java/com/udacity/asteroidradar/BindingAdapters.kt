@@ -29,6 +29,13 @@ fun bindImage(imgView: ImageView, apod: PictureOfDay?) {
                 error(R.drawable.ic_broken_image)           // retrieval of image unsuccessful
             }
     }
+//        ?: run {
+//        // apod = null (connection error during retrieval of APOD data from NASA server)
+//        imgView.visibility = View.VISIBLE
+//        imgView.setImageResource(R.drawable.ic_connection_error)
+//        //statusImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+//        imgView.adjustViewBounds = false
+//    }
 }
 
 

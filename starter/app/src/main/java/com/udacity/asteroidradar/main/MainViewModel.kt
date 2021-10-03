@@ -89,7 +89,9 @@ class MainViewModel(private val repo: AsteroidsRepository) : ViewModel() {
 
             // fetch asteroids data - also initializes LiveData _statusNeoWs to LOADING
             // ... received data is used to update the DB
-            // repo.refreshAsteroidsInDB()
+            //
+            // TODO: move this to worker (running once per day, constraints: charging, wifi)
+            repo.refreshAsteroidsInDB()
 
         }
 
