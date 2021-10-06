@@ -28,6 +28,10 @@ fun bindImage(imgView: ImageView, apod: PictureOfDay?) {
                 placeholder(R.drawable.loading_animation)   // during loading of actual image
                 error(R.drawable.ic_broken_image)           // retrieval of image unsuccessful
             }
+
+        // accessibility - set content description to text associated with image (for talkback)
+        imgView.contentDescription = it.title
+
     }
 //        ?: run {
 //        // apod = null (connection error during retrieval of APOD data from NASA server)
@@ -55,12 +59,14 @@ fun bindStatus(statusImageView: ImageView, status: NetApiStatus?) {
             statusImageView.visibility = View.VISIBLE
             statusImageView.setImageResource(R.drawable.loading_animation)
             //statusImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            statusImageView.contentDescription = "Network loading spinner"
             statusImageView.adjustViewBounds = true
         }
         NetApiStatus.ERROR -> {
             statusImageView.visibility = View.VISIBLE
             statusImageView.setImageResource(R.drawable.ic_connection_error)
             //statusImageView.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            statusImageView.contentDescription = "Network error"
             statusImageView.adjustViewBounds = false
         }
         NetApiStatus.DONE -> {

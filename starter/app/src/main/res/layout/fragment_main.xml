@@ -60,6 +60,7 @@
                 android:textSize="20sp"
                 android:layout_gravity="bottom"
                 android:background="#55010613"
+                android:contentDescription="@string/label_of_apod"
                 android:text="@string/image_of_the_day" />
         </FrameLayout>
 
@@ -96,6 +97,7 @@
             tools:listitem="@layout/recycler_view_item"
             />
 
+        <!-- not needed (added own loading spinner)
         <ProgressBar
             android:id="@+id/status_loading_wheel"
             android:layout_width="wrap_content"
@@ -106,6 +108,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+            -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
