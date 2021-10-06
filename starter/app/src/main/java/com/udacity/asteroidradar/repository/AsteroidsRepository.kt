@@ -20,7 +20,8 @@ package com.udacity.asteroidradar.repository
 
 import android.annotation.SuppressLint
 import androidx.lifecycle.*
-import com.example.android.devbyteviewer.database.AsteroidsDatabase
+import com.udacity.asteroidradar.database.AsteroidsDao
+import com.udacity.asteroidradar.database.asDomainModel
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.BuildConfig
 import com.udacity.asteroidradar.Constants
@@ -29,11 +30,8 @@ import com.udacity.asteroidradar.api.ApodApi
 import com.udacity.asteroidradar.api.AsteroidsNeoWsApi
 import com.udacity.asteroidradar.api.asDatabaseModel
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
-import com.udacity.asteroidradar.database.DatabaseAsteroid
-import com.udacity.asteroidradar.database.asDomainModel
 import com.udacity.asteroidradar.main.NetApiStatus
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.json.JSONObject
 import retrofit2.Response
 import timber.log.Timber
@@ -43,157 +41,171 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 // initiate repo for our data
-// 'dependency injection: DB passed via the constructor
-class AsteroidsRepository(private val database: AsteroidsDatabase) {
+// 'dependency injection: DAO of DB passed via the constructor
+class AsteroidsRepository(private val asteroidsDao: AsteroidsDao) {
 
     // fetch API key from build config parameter NASA_API_KEY, see: build.gradle (:app)
     private val API_KEY = BuildConfig.NASA_API_KEY
 
-
-    // LiveData for storing the status of the most recent API request (to 'ApodApi')
-    private val _statusApod = MutableLiveData<NetApiStatus>()
-    val statusApod: LiveData<NetApiStatus>
-        get() = _statusApod
 
     // LiveData for Astronomy Picture of the Day (APOD) to be displayed atop the asteroids list
     private val _apod= MutableLiveData<PictureOfDay?>()
     val apod: LiveData<PictureOfDay?>
         get() = _apod
 
+    // LiveData for storing the status of the most recent API request (to 'ApodApi')
+    private val _statusApod = MutableLiveData<NetApiStatus>()
+    val statusApod: LiveData<NetApiStatus>
+        get() = _statusApod
 
     // LiveData for storing the status of the most recent API request (to 'AsteroidsNeoWsApi')
     private val _statusNeoWs = MutableLiveData<NetApiStatus>()
     val statusNeoWs: LiveData<NetApiStatus>
         get() = _statusNeoWs
 
-    // LiveData for list of asteroids to be displayed
-    private val _asteroids = MutableLiveData<List<Asteroid>>()
-    val asteroids: LiveData<List<Asteroid>>
-        get() = _asteroids
+
+    // define upcoming week
+    private var upcomingWeekDates: ArrayList<String>
+    private var dateToday: String
+    private var dateNextWeek: String
 
 
     // upon instantiating the repository class (from ViewModel)
     init {
 
-        // fetch asteroid data from DB and use Transformation.map to turn the (LiveData)
-        // List<DatabaseAsteroid> to its corresponding 'domain format', i. e. a (LiveData)
-        // List<Asteroid>
-        // ... see: https://proandroiddev.com/livedata-transformations-4f120ac046fc
-        _asteroids.value = database.asteroidsDao.getAsteroids().map { it.asDomainModel() }.value
+        // make sure all LiveData elements have defined values
+        // ... omitting this, appears to cause an ('obscure') crash
+        //     - presumably caused by Android calling the LD observer (to update the UI) and
+        //       receiving invalid data (null)
+        //     - possibly the crash happens in the BindingAdapter, when fetching statusNeoWs or
+        //       statusApod (not sure)
+        _statusNeoWs.value = NetApiStatus.DONE
+        _statusApod.value = NetApiStatus.DONE
+        _apod.value = null
+
+        // rolling week for data fetch from NASA server - delimited by today ... today + 7 days
+        upcomingWeekDates = getNeoWsDownloadDates()
+        dateToday = upcomingWeekDates[0]    // today
+        dateNextWeek = upcomingWeekDates[1]      // today + one week
 
     }
 
 
-    // updating asteroid data in DB (by accessing the NASA/NeoWs server - HTTP/GET)
-    suspend fun refreshAsteroids() {
+    // fetch different scopes of data from DB: all asteroids from today on
+    fun fetchAsteroidsFromTodayOn(): LiveData<List<Asteroid>> {
+        return asteroidsDao.getAsteroidsFromTodayOn(dateToday).map {
+            //database.asteroidsDao.getAllAsteroids().map {
+            it.asDomainModel()
+        }
+    }
 
-        // rolling week for data fetch from NASA server - delimited by today ... today + 7 days
-        val upcomingWeekDates: ArrayList<String> = getNeoWsDownloadDates()
-        val startDate = upcomingWeekDates[0]
-        val endDate = upcomingWeekDates[1]
+    // fetch different scopes of data from DB: all asteroids approaching today
+    fun fetchAsteroidsApproachingToday(): LiveData<List<Asteroid>> {
+        return asteroidsDao.getAsteroidsApproachingToday(dateToday).map {
+            //database.asteroidsDao.getAllAsteroids().map {
+            it.asDomainModel()
+        }
+    }
 
-        // send GET request to server - coroutine to avoid blocking the UI thread
+    // fetch different scopes of data from DB: all asteroids stored in DB
+    fun fetchAsteroidsAll(): LiveData<List<Asteroid>> {
+        return asteroidsDao.getAllAsteroids().map {
+            it.asDomainModel()
+        }
+    }
+
+    // method to retrieve list of asteroids
+    suspend fun refreshAsteroidsInDB() {
+
+        // set initial status
+        // ... use postValue when setting LiveData values from background threads, see:
+        // https://stackoverflow.com/questions/51299641/difference-of-setvalue-postvalue-in-mutablelivedata
+        _statusNeoWs.postValue(NetApiStatus.LOADING)
+
+        // send GET request to server - coroutine to avoid blocking the main (UI) thread
         withContext(Dispatchers.IO) {
-
-            // new network data
-            var netAsteroidData: List<DatabaseAsteroid>? = null
-
-            // set initial status
-            _statusNeoWs.value = NetApiStatus.LOADING
 
             // attempt to read data from server
             try{
-
                 // initiate the (HTTP) GET request using the provided query parameters
                 // (... the URL ends on '?start_date=<startDate.value>&end_date=<...>&...' )
-                Timber.i("Sending GET request for NASA/NeoWs data from ${startDate} to ${endDate}")
+                Timber.i("Sending GET request for NASA/NeoWs data from ${dateToday} to ${dateNextWeek}")
                 val response: Response<String> = AsteroidsNeoWsApi.retrofitServiceScalars
-                    .getAsteroids(startDate, endDate, API_KEY)
-                Timber.i("NeoWs GET request complete")
+                        .getAsteroids(dateToday, dateNextWeek, API_KEY)
 
-                // got data back?
+                // got any valid data back?
                 // ... see: https://johncodeos.com/how-to-parse-json-with-retrofit-converters-using-kotlin/
                 if (response.isSuccessful) {
-                    netAsteroidData =
-                        parseAsteroidsJsonResult(JSONObject(response.body()!!)).asDatabaseModel()
-                }
+                    Timber.i("NeoWs GET response received (parsing...)")
 
-                // set status to keep UI updated
-                _statusNeoWs.value = NetApiStatus.DONE
+                    // new network data
+                    val netAsteroidData =
+                        parseAsteroidsJsonResult(JSONObject(response.body()!!)).asDatabaseModel()
+
+                    // set status to keep UI updated
+                    _statusNeoWs.postValue(NetApiStatus.DONE)
+                    Timber.i("NeoWs GET request complete (success)")
+
+                    // store network data in DB
+                    //
+                    // DAO method 'insertAll' allows to be called with 'varargs'
+                    // --> convert to (typed) array and use 'spread operator' to turn to 'varargs'
+                    asteroidsDao.insertAll(*netAsteroidData.toTypedArray())
+                    Timber.i("NeoWs data stored in DB")
+
+                }  // if(response.isSuccessful)
 
             } catch (e: Exception) {
 
-                // something went wrong --> reset _asteroids list
-                _asteroids.value = ArrayList()
-                _statusNeoWs.value = NetApiStatus.ERROR
+                // something went wrong
+                _statusNeoWs.postValue(NetApiStatus.ERROR)
+                Timber.i("NeoWs GET request complete (failure)")
+                Timber.i("Exception: ${e.message} // ${e.cause}")
 
             }
 
-            // store network data in DB
-            //
-            // DAO method 'insertAll' allows to be called with 'varargs'
-            // --> convert to (typed) array and use 'spread operator' to turn to 'varargs'
-            netAsteroidData?.let {
-                database.asteroidsDao.insertAll(*it.toTypedArray())
-            }
+       }  // coroutine scope (IO)
 
-            // store saved data in LiveData (for ViewModel --> UI)
-            _asteroids.value = netAsteroidData?.asDomainModel()
-
-        }  // coroutine scope (IO)
-
-    }  // refreshAsteroids()
+    }  // refreshAsteroidsInDB()
 
 
     // updating Astronomy Picture of the Day (APOD) data in DB (by accessing the NASA/APOD server)
-    suspend fun refreshPictureOfDay() {
+    suspend fun fetchPictureOfTheDay() {
 
         // send GET request to server - coroutine to avoid blocking the UI thread
         withContext(Dispatchers.IO) {
 
             // set initial status
-            _statusApod.value = NetApiStatus.LOADING
+            _statusApod.postValue(NetApiStatus.LOADING)
 
             // attempt to read data from server
             try{
                 // initiate the (HTTP) GET request
-                Timber.i("Sending APOD GET request")
-                val response: Response<PictureOfDay> = ApodApi.retrofitServiceMoshi
-                    .getPictureOfDay(API_KEY)
-                Timber.i("APOD GET request complete")
+                Timber.i("Sending GET request for NASA/APOD data")
+                val response: Response<PictureOfDay> =
+                    ApodApi.retrofitServiceMoshi.getPictureOfDay(API_KEY)
+
 
                 // received anything useful?
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        _apod.value = it
+                        _apod.postValue(it)
                     }
                 }
 
                 // set status to keep UI updated
-                _statusApod.value = NetApiStatus.DONE
+                _statusApod.postValue(NetApiStatus.DONE)
+                Timber.i("APOD GET request complete (success)")
 
             } catch (e: Exception) {
 
                 // something went wrong --> reset Picture of Day LiveData
-                _apod.value = null
-                _statusApod.value = NetApiStatus.ERROR
+                _apod.postValue(null)
+                _statusApod.postValue(NetApiStatus.ERROR)
+                Timber.i("APOD GET request complete (failure)")
+                Timber.i("Exception: ${e.message} // ${e.cause}")
 
             }
-
-// TODO - if APOD data needed in DB
-// TODO - if APOD data needed in DB
-// TODO - if APOD data needed in DB
-//
-//            // store network data in DB
-//            //
-//            // DAO method 'insertAll' allows to be called with 'varargs'
-//            // --> convert to (typed) array and use 'spread operator' to turn to 'varargs'
-//            netApodData?.let {
-//                database.asteroidsDao.insertAll(*it.toTypedArray())
-//            }
-//
-//            // store saved data in LiveData (for ViewModel --> UI)
-//            _apod.value = netApodData?.asDomainModel()
 
         }  // coroutine scope (IO)
 

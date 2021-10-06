@@ -16,20 +16,27 @@
  */
 // fw-210927: adjusted for com.udacity.asteroidradar
 
-package com.example.android.devbyteviewer.database
+package com.udacity.asteroidradar.database
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.udacity.asteroidradar.database.DatabaseAsteroid
 
 // define database access object (DAO) through which we can interact with the DB
 @Dao
 interface AsteroidsDao {
 
     // fetch all available asteroids from DB
-    @Query("select * from databaseasteroid")
-    fun getAsteroids(): LiveData<List<DatabaseAsteroid>>
+    @Query("select * from asteroid_data_table order by closeApproachDate asc")
+    fun getAllAsteroids(): LiveData<List<DatabaseAsteroid>>
+
+    // fetch coming asteroids from DB
+    @Query("select * from asteroid_data_table where closeApproachDate >= :dateStart order by closeApproachDate asc")
+    fun getAsteroidsFromTodayOn(dateStart: String): LiveData<List<DatabaseAsteroid>>
+
+    // fetch coming asteroids from DB
+    @Query("select * from asteroid_data_table where closeApproachDate = :dateToday order by closeApproachDate asc")
+    fun getAsteroidsApproachingToday(dateToday: String): LiveData<List<DatabaseAsteroid>>
 
     // insert asteroids - should the data of an asteroid have changed, overwrite old entry
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -38,35 +45,43 @@ interface AsteroidsDao {
 }
 
 // define the DB for local storage of asteroid data (as abstract class)
-@Database(entities = [DatabaseAsteroid::class], version = 1)
+@Database(entities = [DatabaseAsteroid::class], version = 2, exportSchema = false)
 abstract class AsteroidsDatabase : RoomDatabase() {
 
     // DB has a reference to the DAO (abstract, as it's but an interface)
     abstract val asteroidsDao: AsteroidsDao
 
-}
+    // DB instance
+    companion object {
 
-// singleton instance of the DB --> this instantiates the DB (under the 'singleton' name 'INSTANCE')
-private lateinit var INSTANCE: AsteroidsDatabase
+        // Singleton prevents multiple instances of database opening at the same time
+        // ... see: https://developer.android.com/codelabs/android-room-with-a-view-kotlin#7
+        @Volatile
+        private var INSTANCE: AsteroidsDatabase? = null
 
-// getter function to retrieve a reference to the (singleton) DB object
-fun getDatabase(context: Context): AsteroidsDatabase {
+        fun getDatabase(context: Context): AsteroidsDatabase {
 
-    // ensure thread safety
-    synchronized(AsteroidsDatabase::class.java) {
+            // create the DB - only done once
+            return INSTANCE ?: synchronized(this) {
 
-        // DB already initialized?
-        if (!::INSTANCE.isInitialized) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AsteroidsDatabase::class.java,
+                    "asteroids"
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
 
-            // nope - initialize it here (once and for all)
-            INSTANCE = Room.databaseBuilder(
-                context.applicationContext,
-                AsteroidsDatabase::class.java,
-                "asteroids").build()
-        }
+                // set (singleton) INSTANCE to newly created DB
+                INSTANCE = instance
 
-    }
+                // ... and return it
+                instance
 
-    // return reference to (initialized) DB object
-    return INSTANCE
-}
+            }  // synchronized
+
+        }  // getDatabase()
+
+    }  // companion object
+
+}  // class: AsteroidsDatabase
