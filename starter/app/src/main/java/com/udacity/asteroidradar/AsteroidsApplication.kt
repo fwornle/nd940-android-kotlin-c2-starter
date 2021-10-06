@@ -44,8 +44,8 @@ class AsteroidsApplication: Application(), Configuration.Provider {
 
         // define configuration of WorkManager job: scheduling frequency, constraints (see above)
         val repeatingRequest = PeriodicWorkRequestBuilder<RefreshDataWorker>(
-            20,
-            TimeUnit.MINUTES
+            1,
+            TimeUnit.DAYS
         )
             .setConstraints(constraints)
             .build()
