@@ -13,7 +13,7 @@ class RefreshDataWorker(appContext: Context, params: WorkerParameters):
 
     // UUID for our work (to be scheduled by WorkManager)
     companion object {
-        const val WORK_NAME = "RefreshDataWorker"
+        const val WORK_NAME = "AsteroidsDataWorker"
     }
 
     // define work to be done

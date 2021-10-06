@@ -45,7 +45,7 @@ interface AsteroidsDao {
 }
 
 // define the DB for local storage of asteroid data (as abstract class)
-@Database(entities = [DatabaseAsteroid::class], version = 2)
+@Database(entities = [DatabaseAsteroid::class], version = 2, exportSchema = false)
 abstract class AsteroidsDatabase : RoomDatabase() {
 
     // DB has a reference to the DAO (abstract, as it's but an interface)
